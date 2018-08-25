@@ -20,17 +20,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public List<TransactionDto> getTransactionsLast60Seconds() {
-        List<TransactionDto> result =  new ArrayList<>();
-
-        Instant instant = LocalDateTime.now(ZoneId.of("UTC")).toInstant(OffsetDateTime.now().getOffset());
-        Timestamp now = Timestamp.from(instant);
-
-        for (TransactionDto transactionDto : MockData.transactions) {
-            if (CommonHelper.getDateDiff(now.getTime(), transactionDto.getTimestamp().getTime(), TimeUnit.SECONDS) <= 60) {
-                result.add(transactionDto);
-            }
-        }
-        return MockData.transactions;
+        return CommonHelper.filterTransactions(MockData.transactions);
     }
 
     @Override

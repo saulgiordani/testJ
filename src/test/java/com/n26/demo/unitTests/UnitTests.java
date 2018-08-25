@@ -23,13 +23,15 @@ public class UnitTests {
 
     @Test
     public void testCalcutationsStatistics() {
-        List<TransactionDto> transactionDtos = initMockData();
+        List<TransactionDto> transactionDtos = CommonHelper.initMockData();
+        List<TransactionDto> filterTransactions = CommonHelper.filterTransactions(transactionDtos);
+        BigDecimal sum = CommonHelper.calculateSum(filterTransactions);
 
-        assertTrue("sum incorrect", new BigDecimal("104.55").equals(calculateSum(transactionDtos)));
-        assertTrue("avg incorrect", new BigDecimal("10.46").equals(
-                calculateAvg(new Long(transactionDtos.size()), calculateSum(transactionDtos))));
-        assertTrue("max incorrect", new BigDecimal("10.76").equals(calculateMax(transactionDtos)));
-        assertTrue("min incorrect", new BigDecimal("10.24").equals(calculateMin(transactionDtos)));
+        assertTrue("sum incorrect", new BigDecimal("104.20").equals(CommonHelper.calculateSum(filterTransactions)));
+        assertTrue("avg incorrect", new BigDecimal("11.58").equals(
+                CommonHelper.calculateAvg(new Long(filterTransactions.size()), sum)));
+        assertTrue("max incorrect", new BigDecimal("20.76").equals(CommonHelper.calculateMax(filterTransactions)));
+        assertTrue("min incorrect", new BigDecimal("10.24").equals(CommonHelper.calculateMin(filterTransactions)));
     }
 
     @Test
@@ -39,59 +41,11 @@ public class UnitTests {
         Instant instant = LocalDateTime.now(ZoneId.of("UTC")).toInstant(OffsetDateTime.now().getOffset());
         Timestamp now = Timestamp.from(instant);
 
-        for (TransactionDto transactionDto : initMockData()) {
+        for (TransactionDto transactionDto : CommonHelper.initMockData()) {
             if (CommonHelper.getDateDiff(now.getTime(), transactionDto.getTimestamp().getTime(), TimeUnit.SECONDS) <= 60) {
                 result.add(transactionDto);
             }
         }
         assertTrue("size should be 9, but was: " + result.size(), result.size() == 9);
-    }
-
-    private BigDecimal calculateSum(List<TransactionDto> transactions) {
-        BigDecimal sum = transactions.stream().map(TransactionDto::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return setScale(sum);
-    }
-
-    private BigDecimal calculateAvg(long size, BigDecimal sum) {
-        return setScale(sum.divide(BigDecimal.valueOf(new Long(size))));
-    }
-
-    private BigDecimal calculateMax(List<TransactionDto> transactions) {
-        Optional<BigDecimal> max = transactions.stream()
-                .map(t -> t.getAmount())
-                .max(Comparator.naturalOrder());
-        return setScale(max.get());
-    }
-
-    private BigDecimal calculateMin(List<TransactionDto> transactions) {
-        Optional<BigDecimal> min = transactions.stream()
-                .map(t -> t.getAmount())
-                .min(Comparator.naturalOrder());
-        return setScale(min.get());
-    }
-
-    private BigDecimal setScale(BigDecimal bigDecimal) {
-        return bigDecimal.setScale(2, BigDecimal.ROUND_HALF_UP);
-    }
-
-    private List<TransactionDto> initMockData() {
-        List<TransactionDto> transactionDtos = new ArrayList<>();
-
-        String timestampOk = ZonedDateTime.now(ZoneId.of("UTC")).toString().replace("[UTC]", "");
-        String timestampNoOk = ZonedDateTime.now(ZoneId.of("UTC")).minusSeconds(70).toString().replace("[UTC]", "");
-
-        transactionDtos.add(new TransactionDto("10.755", timestampOk)); //max
-        transactionDtos.add(new TransactionDto("10.435", timestampOk));
-        transactionDtos.add(new TransactionDto("10.455", timestampOk));
-        transactionDtos.add(new TransactionDto("10.435", timestampOk));
-        transactionDtos.add(new TransactionDto("10.455", timestampOk));
-        transactionDtos.add(new TransactionDto("10.435", timestampOk));
-        transactionDtos.add(new TransactionDto("10.455", timestampOk));
-        transactionDtos.add(new TransactionDto("10.435", timestampOk));
-        transactionDtos.add(new TransactionDto("10.455", timestampOk));
-        transactionDtos.add(new TransactionDto("10.235", timestampNoOk)); //min
-
-        return transactionDtos;
     }
 }
